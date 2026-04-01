@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const API = axios.create({
-  // baseURL: "http://localhost:3000/api",
-  baseURL:'https://improve-my-city.onrender.com'
+  baseURL: "http://localhost:3000/api",
+  // baseURL:'https://improve-my-city.onrender.com'
 });
 
 // ✅ Attach token for all requests automatically

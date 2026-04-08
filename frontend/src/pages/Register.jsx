@@ -1,19 +1,24 @@
-// src/pages/Register.jsx
-import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { registerUser } from "../features/auth/authThunks";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { registerSchema } from "../validations/authSchema";
 
 const Register = () => {
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, error } = useSelector((s) => s.auth);
 
-  const submit = async (e) => {
-    e.preventDefault();
-    const res = await dispatch(registerUser(form));
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({ resolver: zodResolver(registerSchema) });
+
+  const onSubmit = async (data) => {
+    const res = await dispatch(registerUser(data));
     if (!res.error) navigate("/");
   };
 
@@ -30,37 +35,44 @@ const Register = () => {
         </h2>
 
         {error && (
-          <p className="text-red-600 dark:text-red-400 text-center mb-4">
-            {error}
-          </p>
+          <p className="text-red-600 dark:text-red-400 text-center mb-4">{error}</p>
         )}
 
-        <form onSubmit={submit} className="space-y-5">
-          <input
-            required
-            name="name"
-            placeholder="Full Name"
-            className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/40 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-          />
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <div>
+            <input
+              {...register("name")}
+              placeholder="Full Name"
+              className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/40 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+            />
+            {errors.name && (
+              <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+            )}
+          </div>
 
-          <input
-            required
-            name="email"
-            type="email"
-            placeholder="Email"
-            className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/40 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
+          <div>
+            <input
+              {...register("email")}
+              type="email"
+              placeholder="Email"
+              className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/40 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+            />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+            )}
+          </div>
 
-          <input
-            required
-            name="password"
-            type="password"
-            placeholder="Password"
-            className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/40 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
+          <div>
+            <input
+              {...register("password")}
+              type="password"
+              placeholder="Password"
+              className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/40 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+            />
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+            )}
+          </div>
 
           <button
             disabled={loading}

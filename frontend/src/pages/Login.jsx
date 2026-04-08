@@ -1,19 +1,24 @@
-// src/pages/Login.jsx
-import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { loginUser } from "../features/auth/authThunks";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { loginSchema } from "../validations/authSchema";
 
 const Login = () => {
-  const [form, setForm] = useState({ email: "", password: "" });
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, error } = useSelector((s) => s.auth);
 
-  const submit = async (e) => {
-    e.preventDefault();
-    const res = await dispatch(loginUser(form));
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({ resolver: zodResolver(loginSchema) });
+
+  const onSubmit = async (data) => {
+    const res = await dispatch(loginUser(data));
     if (!res.error) navigate("/");
   };
 
@@ -39,24 +44,30 @@ const Login = () => {
           </motion.p>
         )}
 
-        <form onSubmit={submit} className="space-y-5">
-          <input
-            required
-            name="email"
-            type="email"
-            placeholder="Email"
-            className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/40 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <div>
+            <input
+              {...register("email")}
+              type="email"
+              placeholder="Email"
+              className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/40 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+            />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+            )}
+          </div>
 
-          <input
-            required
-            name="password"
-            type="password"
-            placeholder="Password"
-            className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/40 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
+          <div>
+            <input
+              {...register("password")}
+              type="password"
+              placeholder="Password"
+              className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/40 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+            />
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+            )}
+          </div>
 
           <motion.button
             whileTap={{ scale: 0.97 }}
@@ -75,7 +86,7 @@ const Login = () => {
         </form>
 
         <p className="text-center text-gray-600 dark:text-gray-400 mt-6 text-sm">
-          Don’t have an account?{" "}
+          Don't have an account?{" "}
           <span
             onClick={() => navigate("/register")}
             className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer font-medium"

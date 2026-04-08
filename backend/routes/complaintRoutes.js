@@ -1,5 +1,3 @@
-// routes/complaintRoutes.js
-
 import express from "express";
 import {
   createComplaint,
@@ -7,44 +5,19 @@ import {
   getAllComplaints,
   getComplaintById,
   getComplaintStatus,
-  updateComplaint, // ✅ Admin can update
+  updateComplaint,
 } from "../controllers/complaintController.js";
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
+import { validate } from "../middleware/validate.js";
+import { createComplaintSchema, updateComplaintSchema } from "../validations/complaintValidation.js";
 
 const router = express.Router();
 
-/**
- * 🟢 USER: Create a new complaint
- * - Only logged-in users can create
- */
-router.post("/", protect, createComplaint);
-
-/**
- * 🟡 USER: Get all their own complaints
- */
+router.post("/", protect, validate(createComplaintSchema), createComplaint);
 router.get("/my", protect, getMyComplaints);
-
-/**
- * 🔵 ALL USERS: Get all complaints (everyone can see)
- * - Removed adminOnly middleware so all logged-in users can view
- * - You can remove `protect` if you want even public (non-logged-in) users to see
- */
 router.get("/", getAllComplaints);
-
-/**
- * 🟣 Get single complaint by ID
- */
 router.get("/:id", protect, getComplaintById);
-
-/**
- * 🟠 Get complaint status (for chatbot or user status checking)
- */
 router.get("/chatbot/status/:id", protect, getComplaintStatus);
-
-/**
- * 🔴 ADMIN: Update complaint (status/message)
- * - Also triggers Gmail notification to the complaint owner
- */
-router.put("/:id", protect, adminOnly, updateComplaint);
+router.put("/:id", protect, adminOnly, validate(updateComplaintSchema), updateComplaint);
 
 export default router;

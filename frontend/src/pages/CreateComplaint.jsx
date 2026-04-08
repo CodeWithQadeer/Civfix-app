@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import API from "../api/api";
-import { uploadImageToFirebase } from "../firebase/uploadImage";
+import { uploadImageToFirebase } from "../services/uploadImage";
+import { complaintSchema } from "../validations/complaintSchema";
 import { ImagePlus, Loader2, Upload, LocateFixed } from "lucide-react";
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
@@ -54,6 +55,7 @@ const CreateComplaint = () => {
 
   const [loading, setLoading] = useState(false);
   const [mapKey, setMapKey] = useState(0);
+  const [validationErrors, setValidationErrors] = useState({});
   const mapRef = useRef(null);
   const { token } = useSelector((state) => state.auth);
 
@@ -97,9 +99,24 @@ const CreateComplaint = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!token) return alert("Please log in to submit a complaint.");
-    if (!formData.title || !formData.description || !formData.lat || !formData.lng)
-      return alert("Please fill all fields and select a location on the map.");
 
+    const result = complaintSchema.safeParse({
+      title: formData.title,
+      description: formData.description,
+      category: formData.category,
+      lat: formData.lat,
+      lng: formData.lng,
+    });
+
+    if (!result.success) {
+      const fieldErrors = {};
+      result.error.errors.forEach((err) => {
+        fieldErrors[err.path[0]] = err.message;
+      });
+      setValidationErrors(fieldErrors);
+      return;
+    }
+    setValidationErrors({});
     setLoading(true);
     try {
       let imageUrl = "";
@@ -156,9 +173,11 @@ const CreateComplaint = () => {
                 placeholder="Enter complaint title"
                 value={formData.title}
                 onChange={handleChange}
-                required
                 className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:ring-2 focus:ring-blue-500 outline-none"
               />
+              {validationErrors.title && (
+                <p className="text-red-500 text-sm mt-1">{validationErrors.title}</p>
+              )}
             </div>
 
             {/* Description */}
@@ -172,9 +191,11 @@ const CreateComplaint = () => {
                 value={formData.description}
                 onChange={handleChange}
                 rows="4"
-                required
                 className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 focus:ring-2 focus:ring-blue-500 outline-none resize-none"
               ></textarea>
+              {validationErrors.description && (
+                <p className="text-red-500 text-sm mt-1">{validationErrors.description}</p>
+              )}
             </div>
 
             {/* Category */}
@@ -285,6 +306,10 @@ const CreateComplaint = () => {
             <LocateFixed className="w-4 h-4" />
             Recenter to My Location
           </button>
+
+          {validationErrors.lat && (
+            <p className="text-red-500 text-sm">{validationErrors.lat}</p>
+          )}
 
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 text-center sm:text-left">
             📍 {formData.lat && formData.lng
